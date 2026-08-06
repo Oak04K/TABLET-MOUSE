@@ -11,22 +11,25 @@ Optimized for pixel art in Aseprite with Palm Rejection, Pinch-to-Zoom, and Acti
 - **Pinch-to-Zoom:** Use two fingers on the tablet to zoom in/out on Aseprite.
 - **Jitter Smoothing:** Built-in intelligent smoothing (EMA filter) to stabilize your strokes when the active area is small.
 
-## Requirements (PC)
-- **Python 3** (Download from python.org or Microsoft Store)
-- Required Python packages: `websockets`, `pynput`
+## Download & Installation
 
-## Installation
-1. Open Command Prompt (`cmd`) on your Windows PC.
-2. Run the following command to install dependencies:
+### Option 1: Direct Download (Ready to use)
+The easiest way to use Tablet Mouse. No Python installation required!
+1. [📥 Download TabletMouse.exe](https://github.com/Oak04K/TABLET-MOUSE/raw/main/TabletMouse.exe)
+2. Double-click the downloaded `TabletMouse.exe` to start the server.
+
+### Option 2: Run from Source Code (For developers)
+If you want to view or modify the code:
+1. Ensure **Python 3** is installed on your PC.
+2. Open Command Prompt (`cmd`) and run:
    ```cmd
    python -m pip install websockets pynput
    ```
+3. Open the `app` folder and double-click `Start_Tablet_Mouse.bat`.
 
 ## Usage
-1. Open the `app` folder and double-click `Start_Tablet_Mouse.bat`.
-2. A command prompt window will appear displaying your local IP URL (e.g., `http://192.168.x.x:8000`).
+1. Run the application (either `TabletMouse.exe` or `Start_Tablet_Mouse.bat`).
+2. A command prompt window will appear displaying your local IP URL (e.g., `http://192.168.x.x:8080`).
 3. Connect your tablet to the same Wi-Fi network (or use USB Tethering for a zero-latency experience).
 4. Open a web browser (Chrome, Safari, etc.) on your tablet and navigate to the displayed URL.
 5. Draw!
-
-*(Tip: You can right-click `Start_Tablet_Mouse.bat` and select `Send to -> Desktop (create shortcut)` for quick access from your Desktop)*
