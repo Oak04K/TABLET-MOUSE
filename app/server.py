@@ -110,8 +110,12 @@ def start_http_server():
     PORT = 8080
     Handler = http.server.SimpleHTTPRequestHandler
     
-    # Change the working directory to the folder containing this script so it serves index.html correctly.
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    # Change the working directory to the folder containing this script or the PyInstaller extracted folder.
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(base_path)
     socketserver.TCPServer.allow_reuse_address = True
     
     # Attempt to get all IP addresses assigned to this PC so we can print them out for the user to type.
