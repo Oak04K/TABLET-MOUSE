@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>TABLET MOUSE</title>
+    <link rel="icon" type="image/png" href="logo.png?v=2">
+    <link rel="apple-touch-icon" href="logo.png?v=2">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            touch-action: none;
+        }
+        #container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+        }
+        #touchArea {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            user-select: none;
+            background: #121212;
+        }
+        
+        /* Premium Minimalist UI */
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Custom minimal slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 90px;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 3px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.15);
+            border-radius: 2px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -4.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        .minimal-btn {
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .minimal-btn:hover, .minimal-btn:active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        #activeBox {
+            position: absolute;
+            pointer-events: none;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        .text-instruction {
+            color: rgba(255,255,255,0.2);
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="status" class="glass-panel" style="position: absolute; top: 20px; left: 20px; font-size: 0.85rem; color: #aaa; padding: 6px 12px; z-index: 10;">
+        <span style="width: 8px; height: 8px; background: #F44336; border-radius: 50%; display: inline-block; margin-right: 8px;" id="statusDot"></span>
+        <span id="statusText">Disconnected</span>
+    </div>
+
+    <div class="glass-panel" style="position: absolute; top: 20px; right: 20px; z-index: 10; padding: 6px 6px 6px 16px; gap: 8px;">
+        <span style="font-size: 0.8rem; color: #888; letter-spacing: 0.5px; text-transform: uppercase;">Area</span>
+        <input type="range" id="areaSlider" min="30" max="100" value="100">
+        <span id="areaValue" style="font-size: 0.85rem; color: #ccc; min-width: 35px; text-align: right; margin-right: 4px;">100%</span>
+        <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.1);"></div>
+        <button id="fsBtn" class="minimal-btn">Full Screen</button>
+    </div>
+
+    <div id="container">
+        <div id="touchArea" style="position: relative;">
+            <div id="activeBox"></div>
+            <div class="text-instruction" style="font-size: 1.2rem; font-weight: 400; letter-spacing: 3px; color: rgba(255,255,255,0.15); text-transform: uppercase;">Tablet Mouse</div>
+        </div>
+    </div>
+
+    <script>
+        const touchArea = document.getElementById('touchArea');
+        const status = document.getElementById('status');
+        const fsBtn = document.getElementById('fsBtn');
+        const areaSlider = document.getElementById('areaSlider');
+        const areaValue = document.getElementById('areaValue');
+        const activeBox = document.getElementById('activeBox');
+        
+        let areaScale = 1.0;
+
+        function updateActiveBox() {
+            const taRect = touchArea.getBoundingClientRect();
+            activeBox.style.width = (taRect.width * areaScale) + 'px';
+            activeBox.style.height = (taRect.height * areaScale) + 'px';
+        }
+
+        areaSlider.addEventListener('input', (e) => {
+            areaScale = e.target.value / 100;
+            areaValue.innerText = e.target.value + '%';
+            updateActiveBox();
+        });
+
+        window.addEventListener('resize', updateActiveBox);
+        setTimeout(updateActiveBox, 100); // Initial setup
+
+        fsBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                fsBtn.innerText = 'Exit Full Screen';
+            } else {
+                document.exitFullscreen();
+                fsBtn.innerText = 'Enter Full Screen';
+            }
+        });
+        
+        let ws;
+        let activePointers = new Map();
+        let initialPinchDistance = null;
+        
+        let smoothX = null;
+        let smoothY = null;
+        
+        const statusText = document.getElementById('statusText');
+        const statusDot = document.getElementById('statusDot');
+        
+        function connect() {
+            const wsUrl = `ws://${window.location.hostname}:8765`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                statusText.innerText = 'Connected';
+                statusDot.style.background = '#4CAF50';
+            };
+
+            ws.onclose = () => {
+                statusText.innerText = 'Reconnecting...';
+                statusDot.style.background = '#F44336';
+                setTimeout(connect, 2000);
+            };
+            
+            ws.onmessage = (event) => {
+                // Future use
+            };
+            
+            ws.onerror = (err) => {
+                console.error('WebSocket Error:', err);
+            };
+        }
+
+        connect();
+
+        function sendEvent(e, type) {
+            e.preventDefault();
+            
+            // === TOUCH MODE (Fingers / Palm) ===
+            // Only used for Pinch-to-Zoom. Never draws.
+            if (e.pointerType === 'touch') {
+                if (type === 'down') {
+                    activePointers.set(e.pointerId, e);
+                } else if (type === 'up' || type === 'cancel') {
+                    activePointers.delete(e.pointerId);
+                    if (activePointers.size < 2) {
+                        initialPinchDistance = null;
+                    }
+                } else if (type === 'move') {
+                    if (activePointers.has(e.pointerId)) {
+                        activePointers.set(e.pointerId, e);
+                    }
+                }
+
+                if (activePointers.size === 2) {
+                    const pointers = Array.from(activePointers.values());
+                    const dx = pointers[0].clientX - pointers[1].clientX;
+                    const dy = pointers[0].clientY - pointers[1].clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (initialPinchDistance === null) {
+                        initialPinchDistance = distance;
+                    } else {
+                        const diff = distance - initialPinchDistance;
+                        // Trigger scroll event if fingers moved enough (15px threshold)
+                        if (Math.abs(diff) > 15) { 
+                            const scrollDir = diff > 0 ? 1 : -1; 
+                            if (ws && ws.readyState === WebSocket.OPEN) {
+                                ws.send(JSON.stringify({
+                                    type: 'scroll',
+                                    dy: scrollDir
+                                }));
+                            }
+                            initialPinchDistance = distance; // reset to new distance
+                        }
+                    }
+                }
+                return; // Stop here. Touch never sends mouse coordinates.
+            }
+
+            // === PEN MODE (S-Pen) ===
+            // Only used for drawing and hovering
+            if (e.pointerType === 'pen' || e.pointerType === 'mouse') {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    const rect = activeBox.getBoundingClientRect();
+                
+                    // Calculate position relative to the activeBox (0.0 to 1.0)
+                    let normX = (e.clientX - rect.left) / rect.width;
+                    let normY = (e.clientY - rect.top) / rect.height;
+                    
+                    // Clamp between 0 and 1 in case finger goes outside the touchArea
+                    normX = Math.max(0, Math.min(1, normX));
+                    normY = Math.max(0, Math.min(1, normY));
+
+                    // Software Jitter Smoothing (EMA Filter)
+                    if (smoothX === null) {
+                        smoothX = normX;
+                        smoothY = normY;
+                    } else {
+                        const dist = Math.hypot(normX - smoothX, normY - smoothY);
+                        // If pen jumps far (lifted and placed elsewhere), snap instantly
+                        if (dist > 0.05) {
+                            smoothX = normX;
+                            smoothY = normY;
+                        } else {
+                            // Blend current position with previous position to kill micro-jitters
+                            // The smaller the active area, the more it jitters, so we smooth more.
+                            const smoothingFactor = Math.max(0.2, areaScale * 0.7); 
+                            smoothX = smoothX + (normX - smoothX) * smoothingFactor;
+                            smoothY = smoothY + (normY - smoothY) * smoothingFactor;
+                            normX = smoothX;
+                            normY = smoothY;
+                        }
+                    }
+
+                    const data = {
+                        type: type,
+                        x: normX,
+                        y: normY,
+                        pressure: e.pressure || 0
+                    };
+                    ws.send(JSON.stringify(data));
+                }
+            }
+        }
+
+    touchArea.addEventListener('pointerdown', (e) => sendEvent(e, 'down'));
+        touchArea.addEventListener('pointermove', (e) => sendEvent(e, 'move'));
+        touchArea.addEventListener('pointerup', (e) => sendEvent(e, 'up'));
+        touchArea.addEventListener('pointercancel', (e) => sendEvent(e, 'up'));
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+</body>
+</html>
