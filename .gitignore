@@ -9,7 +9,7 @@ dist/
 *.spec
 
 # Built executables
-*.exe
+# *.exe
 
 # Shortcuts
 *.lnk
