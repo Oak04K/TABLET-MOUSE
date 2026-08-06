@@ -15,8 +15,11 @@ Optimized for pixel art in Aseprite with Palm Rejection, Pinch-to-Zoom, and Acti
 
 ### Option 1: Direct Download (Ready to use)
 The easiest way to use Tablet Mouse. No Python installation required!
-1. [Download TabletMouse.exe](https://github.com/Oak04K/TABLET-MOUSE/raw/main/TabletMouse.exe)
+1. [📥 Download TabletMouse.exe](https://github.com/Oak04K/TABLET-MOUSE/raw/main/TabletMouse.exe)
 2. Double-click the downloaded `TabletMouse.exe` to start the server.
+
+> **Note:** Because this is a free, open-source tool that controls your mouse over the network, **Windows SmartScreen** might show a blue warning screen saying "Windows protected your PC". 
+> To bypass this, click **"More info"** and then **"Run anyway"**. It is 100% safe, and you can verify all the source code in this repository!
 
 ### Option 2: Run from Source Code (For developers)
 If you want to view or modify the code:
