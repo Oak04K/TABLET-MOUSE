@@ -15,13 +15,14 @@ Optimized for pixel art in Aseprite with Palm Rejection, Pinch-to-Zoom, and Acti
 
 ### Option 1: Direct Download (Ready to use)
 The easiest way to use Tablet Mouse. No Python installation required!
-1. [📥 Download TabletMouse.exe](https://github.com/Oak04K/TABLET-MOUSE/raw/main/TabletMouse.exe)
+1. [Download TabletMouse.exe](https://github.com/Oak04K/TABLET-MOUSE/raw/main/TabletMouse.exe)
 2. Double-click the downloaded `TabletMouse.exe` to start the server.
 
 ### Option 2: Run from Source Code (For developers)
 If you want to view or modify the code:
 1. Ensure **Python 3** is installed on your PC.
 2. Open Command Prompt (`cmd`) and run:
+
    ```cmd
    python -m pip install websockets pynput
    ```
