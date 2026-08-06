@@ -1,6 +1,6 @@
-# Tablet Mouse for Aseprite 🎨
+# Tablet Mouse for Aseprite
 
-Turn your Android tablet (or iPad) into a low-latency, absolute-positioning drawing tablet for your PC over Wi-Fi or USB tethering! 
+Turn your Android tablet (or iPad) into a low-latency, absolute-positioning drawing tablet for your PC over Wi-Fi or USB tethering. 
 Optimized for pixel art in Aseprite with Palm Rejection, Pinch-to-Zoom, and Active Area mapping.
 
 ## Features
@@ -29,4 +29,4 @@ Optimized for pixel art in Aseprite with Palm Rejection, Pinch-to-Zoom, and Acti
 4. Open a web browser (Chrome, Safari, etc.) on your tablet and navigate to the displayed URL.
 5. Draw!
 
-*(Tip: You can right-click `Start_Tablet_Mouse.bat` and select `Send to -> Desktop (create shortcut)` for quick access from your Desktop!)*
+*(Tip: You can right-click `Start_Tablet_Mouse.bat` and select `Send to -> Desktop (create shortcut)` for quick access from your Desktop)*
