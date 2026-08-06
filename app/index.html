@@ -139,30 +139,42 @@
     </div>
 
     <script>
-        const touchArea = document.getElementById('touchArea');
-        const status = document.getElementById('status');
-        const fsBtn = document.getElementById('fsBtn');
-        const areaSlider = document.getElementById('areaSlider');
-        const areaValue = document.getElementById('areaValue');
-        const activeBox = document.getElementById('activeBox');
+        // DOM Elements mapping: We grab elements from the HTML using their IDs so we can manipulate them.
+        const touchArea = document.getElementById('touchArea'); // The main drawing canvas area
+        const status = document.getElementById('status'); // Unused legacy status element, kept for safety
+        const fsBtn = document.getElementById('fsBtn'); // The 'Full Screen' button
+        const areaSlider = document.getElementById('areaSlider'); // The slider that controls active area size
+        const areaValue = document.getElementById('areaValue'); // The text showing the percentage (e.g., "100%")
+        const activeBox = document.getElementById('activeBox'); // The subtle bordered box indicating the drawing zone
         
+        // areaScale represents the size multiplier for the active drawing area (1.0 = 100%, 0.5 = 50%)
         let areaScale = 1.0;
 
+        /**
+         * Function: updateActiveBox
+         * Purpose: Updates the visual size of the drawing box (activeBox) based on the slider value.
+         * Why it's needed: By shrinking this box, the user doesn't have to move their arm as much to reach the edges of the PC monitor.
+         */
         function updateActiveBox() {
-            const taRect = touchArea.getBoundingClientRect();
+            const taRect = touchArea.getBoundingClientRect(); // Get the physical dimensions of the whole tablet screen
+            // Multiply the screen size by our scale to get the new smaller box dimensions
             activeBox.style.width = (taRect.width * areaScale) + 'px';
             activeBox.style.height = (taRect.height * areaScale) + 'px';
         }
 
+        // Event Listener: Fires every time the user drags the area slider
         areaSlider.addEventListener('input', (e) => {
-            areaScale = e.target.value / 100;
-            areaValue.innerText = e.target.value + '%';
-            updateActiveBox();
+            areaScale = e.target.value / 100; // Convert 30-100 to 0.3-1.0
+            areaValue.innerText = e.target.value + '%'; // Update the text label
+            updateActiveBox(); // Redraw the box
         });
 
+        // Ensure the box size updates if the user rotates their tablet or resizes the browser
         window.addEventListener('resize', updateActiveBox);
-        setTimeout(updateActiveBox, 100); // Initial setup
+        setTimeout(updateActiveBox, 100); // Initial setup delay to ensure elements are fully rendered
 
+        // Event Listener for Full Screen button
+        // Why it's needed: Browsers require a user click to enter full screen. Full screen is required to hide the URL bar.
         fsBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
@@ -175,25 +187,36 @@
             }
         });
         
-        let ws;
-        let activePointers = new Map();
-        let initialPinchDistance = null;
+        let ws; // WebSocket connection object
+        let activePointers = new Map(); // Tracks multiple fingers touching the screen for pinch-to-zoom
+        let initialPinchDistance = null; // Stores the initial distance between two fingers
         
+        // Variables for Jitter Smoothing (EMA Filter)
+        // Why they are needed: Touch screens have micro-jitters. When scaling down the active area, this jitter is magnified.
         let smoothX = null;
         let smoothY = null;
         
+        // UI elements for the WebSocket connection status indicator (Red/Green dot)
         const statusText = document.getElementById('statusText');
         const statusDot = document.getElementById('statusDot');
         
+        /**
+         * Function: connect
+         * Purpose: Establishes a WebSocket connection to the Python server running on the PC.
+         * Why it's needed: WebSockets provide an ultra-low latency, continuous two-way connection, which is essential for real-time mouse movement.
+         */
         function connect() {
+            // Use the hostname (IP address) typed in the browser bar, and port 8765
             const wsUrl = `ws://${window.location.hostname}:8765`;
             ws = new WebSocket(wsUrl);
 
+            // When successfully connected, turn the dot green
             ws.onopen = () => {
                 statusText.innerText = 'Connected';
                 statusDot.style.background = '#4CAF50';
             };
 
+            // If disconnected (e.g. Wi-Fi drops), turn red and try to reconnect every 2 seconds
             ws.onclose = () => {
                 statusText.innerText = 'Reconnecting...';
                 statusDot.style.background = '#F44336';
@@ -201,7 +224,7 @@
             };
             
             ws.onmessage = (event) => {
-                // Future use
+                // Future use (e.g., receiving battery status or current tools from the PC)
             };
             
             ws.onerror = (err) => {
@@ -209,27 +232,33 @@
             };
         }
 
-        connect();
+        connect(); // Start the connection immediately
 
+        /**
+         * Function: sendEvent
+         * Purpose: Intercepts all screen touches (finger or pen) and sends them to the PC.
+         * Why it's written this way: It strictly separates 'touch' (finger) from 'pen' (stylus) to create perfect Palm Rejection.
+         */
         function sendEvent(e, type) {
-            e.preventDefault();
+            e.preventDefault(); // Prevent default browser behaviors like scrolling the page or zooming the UI
             
             // === TOUCH MODE (Fingers / Palm) ===
-            // Only used for Pinch-to-Zoom. Never draws.
+            // Fingers are ONLY used for Pinch-to-Zoom. They will NEVER move the mouse or draw.
             if (e.pointerType === 'touch') {
                 if (type === 'down') {
-                    activePointers.set(e.pointerId, e);
+                    activePointers.set(e.pointerId, e); // Register a new finger touching the screen
                 } else if (type === 'up' || type === 'cancel') {
-                    activePointers.delete(e.pointerId);
+                    activePointers.delete(e.pointerId); // Remove the finger when lifted
                     if (activePointers.size < 2) {
-                        initialPinchDistance = null;
+                        initialPinchDistance = null; // Reset pinch if less than 2 fingers remain
                     }
                 } else if (type === 'move') {
                     if (activePointers.has(e.pointerId)) {
-                        activePointers.set(e.pointerId, e);
+                        activePointers.set(e.pointerId, e); // Update finger position
                     }
                 }
 
+                // If exactly two fingers are on the screen, calculate the distance between them
                 if (activePointers.size === 2) {
                     const pointers = Array.from(activePointers.values());
                     const dx = pointers[0].clientX - pointers[1].clientX;
@@ -237,10 +266,10 @@
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (initialPinchDistance === null) {
-                        initialPinchDistance = distance;
+                        initialPinchDistance = distance; // Mark the starting distance
                     } else {
                         const diff = distance - initialPinchDistance;
-                        // Trigger scroll event if fingers moved enough (15px threshold)
+                        // Trigger a scroll event if fingers moved enough (15px threshold) to avoid accidental zooms
                         if (Math.abs(diff) > 15) { 
                             const scrollDir = diff > 0 ? 1 : -1; 
                             if (ws && ws.readyState === WebSocket.OPEN) {
@@ -249,40 +278,41 @@
                                     dy: scrollDir
                                 }));
                             }
-                            initialPinchDistance = distance; // reset to new distance
+                            initialPinchDistance = distance; // Reset baseline to the new distance
                         }
                     }
                 }
-                return; // Stop here. Touch never sends mouse coordinates.
+                return; // Stop execution here. Touch events will NEVER reach the Pen logic below.
             }
 
-            // === PEN MODE (S-Pen) ===
-            // Only used for drawing and hovering
+            // === PEN MODE (S-Pen / Apple Pencil / Mouse) ===
+            // This section ONLY processes stylus or actual mouse input for drawing and hovering.
             if (e.pointerType === 'pen' || e.pointerType === 'mouse') {
                 if (ws && ws.readyState === WebSocket.OPEN) {
-                    const rect = activeBox.getBoundingClientRect();
+                    const rect = activeBox.getBoundingClientRect(); // Get the coordinates of our active drawing box
                 
-                    // Calculate position relative to the activeBox (0.0 to 1.0)
+                    // Calculate position relative to the activeBox (creates a normalized value from 0.0 to 1.0)
                     let normX = (e.clientX - rect.left) / rect.width;
                     let normY = (e.clientY - rect.top) / rect.height;
                     
-                    // Clamp between 0 and 1 in case finger goes outside the touchArea
+                    // Clamp values between 0.0 and 1.0 so if the pen slides outside the box, the cursor stops at the edge of the screen
                     normX = Math.max(0, Math.min(1, normX));
                     normY = Math.max(0, Math.min(1, normY));
 
-                    // Software Jitter Smoothing (EMA Filter)
+                    // === Software Jitter Smoothing (EMA Filter) ===
+                    // Why it's needed: Hardware touch sensors have tiny electrical noise. We blend the new coordinate with the old one to smooth it out.
                     if (smoothX === null) {
                         smoothX = normX;
                         smoothY = normY;
                     } else {
                         const dist = Math.hypot(normX - smoothX, normY - smoothY);
-                        // If pen jumps far (lifted and placed elsewhere), snap instantly
+                        // If the pen jumps a large distance (e.g., lifted and placed elsewhere), snap instantly without smoothing
                         if (dist > 0.05) {
                             smoothX = normX;
                             smoothY = normY;
                         } else {
-                            // Blend current position with previous position to kill micro-jitters
-                            // The smaller the active area, the more it jitters, so we smooth more.
+                            // Blend current position with previous position. 
+                            // The smaller the active area (areaScale), the more it jitters, so we apply stronger smoothing mathematically.
                             const smoothingFactor = Math.max(0.2, areaScale * 0.7); 
                             smoothX = smoothX + (normX - smoothX) * smoothingFactor;
                             smoothY = smoothY + (normY - smoothY) * smoothingFactor;
@@ -291,8 +321,9 @@
                         }
                     }
 
+                    // Package the final calculated coordinates and send them to the Python server
                     const data = {
-                        type: type,
+                        type: type, // 'down', 'move', or 'up'
                         x: normX,
                         y: normY,
                         pressure: e.pressure || 0
@@ -302,11 +333,13 @@
             }
         }
 
-    touchArea.addEventListener('pointerdown', (e) => sendEvent(e, 'down'));
+        // Attach the sendEvent function to all HTML5 Pointer Events on the touchArea
+        touchArea.addEventListener('pointerdown', (e) => sendEvent(e, 'down'));
         touchArea.addEventListener('pointermove', (e) => sendEvent(e, 'move'));
         touchArea.addEventListener('pointerup', (e) => sendEvent(e, 'up'));
-        touchArea.addEventListener('pointercancel', (e) => sendEvent(e, 'up'));
+        touchArea.addEventListener('pointercancel', (e) => sendEvent(e, 'up')); // Handle cases where the system interrupts the touch
 
+        // Prevent the right-click menu from popping up if the user long-presses the screen
         document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
